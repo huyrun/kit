@@ -80,29 +80,34 @@ func (q *queue) Close() {
 
 // open a channel
 func (q *queue) openChannel() error {
-	if q.rabbitmq != nil {
-		if q.rabbitmq.connection != nil {
-			if !q.rabbitmq.connection.IsClosed() {
-				for {
-					channel, err := q.rabbitmq.connection.Channel()
-					if err == nil {
-						q.channel = channel
-
-						q.closed = false
-						q.errorChannel = make(chan *amqp.Error)
-						q.channel.NotifyClose(q.errorChannel)
-						go q.reopenChannel()
-						return nil
-					}
-
-					logrus.WithError(err).Infof("Open queue channel failed. Retrying in %s... ", retry_open_channel_after)
-					time.Sleep(retry_open_channel_after)
-				}
-			}
-		}
+	if q.rabbitmq == nil {
+		return nil
 	}
 
-	return nil
+	if q.rabbitmq.connection == nil {
+		return nil
+	}
+
+	if q.rabbitmq.connection.IsClosed() {
+		return nil
+	}
+
+	for {
+		channel, err := q.rabbitmq.connection.Channel()
+		if err != nil {
+			logrus.WithError(err).Infof("Open queue channel failed. Retrying in %s... ", retry_open_channel_after.String())
+			time.Sleep(retry_open_channel_after)
+			continue
+		}
+
+		q.channel = channel
+
+		q.closed = false
+		q.errorChannel = make(chan *amqp.Error)
+		q.channel.NotifyClose(q.errorChannel)
+		go q.reopenChannel()
+		return nil
+	}
 }
 
 func (q *queue) reopenChannel() {

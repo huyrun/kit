@@ -26,6 +26,15 @@ const (
 	ExchangeHeaders ExchangeType = amqp.ExchangeHeaders
 )
 
+type Header map[string]interface{}
+
+type Body interface{}
+
+type Msg struct {
+	Headers Header
+	Body    Body
+}
+
 // keep rabbitmq connect
 type rabbitmq struct {
 	address         string
