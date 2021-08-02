@@ -1,4 +1,4 @@
-module kit
+module github.com/huypher/kit
 
 go 1.16
 

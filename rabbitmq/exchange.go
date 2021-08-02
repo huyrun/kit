@@ -1,9 +1,7 @@
 package rabbitmq
 
 import (
-	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/cenkalti/backoff"
@@ -11,145 +9,77 @@ import (
 	"github.com/streadway/amqp"
 )
 
-type Exchange interface {
-	Publish(ctx context.Context, message Msg) error
-	PublishWithRetry(ctx context.Context, message Msg, numOfRetries int64) error
-}
-
-type ExchangeInfo struct {
-	Name       string
-	Type       ExchangeType
-	RoutingKey string
-}
-
 type exchange struct {
-	name       string
-	kind       ExchangeType
-	routingKey string
+	name string
+	kind ExchangeType
 
-	rabbitmq     *rabbitmq
-	channel      *amqp.Channel
-	errorChannel chan *amqp.Error
-	closed       bool
-
-	marshalFunc MarshalFunc
+	marshalFunc marshalFunc
 }
 
-// open a channel
-func (e *exchange) openChannel() error {
-	if e.rabbitmq == nil {
-		return nil
-	}
-
-	if e.rabbitmq.connection == nil {
-		return nil
-	}
-
-	if e.rabbitmq.connection.IsClosed() {
-		return nil
-	}
-
-	for {
-		channel, err := e.rabbitmq.connection.Channel()
-		if err != nil {
-			logrus.WithError(err).Infof("Open exchange channel failed. Retrying in %s... ", retry_open_channel_after.String())
-			time.Sleep(retry_open_channel_after)
-			continue
-		}
-
-		e.channel = channel
-
-		e.closed = false
-		e.errorChannel = make(chan *amqp.Error)
-		e.channel.NotifyClose(e.errorChannel)
-		go e.reopenChannel()
-		return nil
+func initExchange() ChannOption {
+	return func(c *channel) {
+		c.exchange = new(exchange)
 	}
 }
 
-func (e *exchange) reopenChannel() {
-	amqpErr := <-e.errorChannel
-
-	if !e.closed {
-		for e.rabbitmq.connection.IsClosed() {
-			// Do not things until connection re-connected
-		}
-
-		time.Sleep(retry_open_channel_after)
-
-		if amqpErr != nil {
-			logrus.Infof("Reopen after channel closed by err: %v", amqpErr.Error())
-		}
-
-		log.Printf("Reopening channel for exchange...")
-		err := e.openChannel()
-		if err != nil {
-			logrus.WithError(err).Infof("Reopen channel of exchange (%s) failed", e.name)
-		}
-
-		log.Printf("Recovery exchange...")
-		if e.name != "" && e.kind != ExchangeDefault {
-			err := e.declareDurableExchange()
-			if err != nil {
-				logrus.WithError(err).Infof("Redeclared exchange failed")
-			}
-		}
+func ExchangeName(name string) ChannOption {
+	return func(c *channel) {
+		c.exchange.name = name
 	}
 }
 
-func (e *exchange) reOpenChannelOnly() error {
-	if !e.closed {
-		e.openChannel()
+func ExchangeKind(kind ExchangeType) ChannOption {
+	return func(c *channel) {
+		c.exchange.kind = kind
 	}
-
-	return nil
 }
 
-func (e *exchange) declareExchange() error {
-	err := e.channel.ExchangeDeclare(
-		e.name,         // name
-		string(e.kind), // kind
-		false,          // durable
-		false,          // delete when unused
-		false,          // exclusive
-		false,          // no-wait
-		nil,            // arguments
+func RegisterMarshalFunc(marshalFunc marshalFunc) ChannOption {
+	return func(c *channel) {
+		c.exchange.marshalFunc = marshalFunc
+	}
+}
+
+func (c *channel) createExchange() error {
+	e := c.exchange
+	err := c.c.ExchangeDeclare(
+		e.name,
+		string(e.kind),
+		true,
+		true,
+		false,
+		false,
+		amqp.Table{},
 	)
-
 	if err != nil {
-		logrus.WithError(err).Infof("Declare exchange %s, kind %s failed", e.name, e.kind)
 		return err
 	}
-
 	return nil
 }
 
-func (e *exchange) declareDurableExchange() error {
-	err := e.channel.ExchangeDeclare(
-		e.name,         // name
-		string(e.kind), // kind
-		true,           // durable
-		false,          // delete when unused
-		false,          // exclusive
-		false,          // no-wait
-		nil,            // arguments
+func (c *channel) createQueue() error {
+	q := c.queue
+	_, err := c.c.QueueDeclare(
+		q.name,
+		true,
+		false,
+		false,
+		false,
+		q.args,
 	)
-
 	if err != nil {
-		logrus.WithError(err).Infof("Declare exchange %s, kind %s failed", e.name, e.kind)
 		return err
 	}
-
 	return nil
 }
 
-func (e *exchange) Close() {
-	log.Println("Closing channel of exchange...")
-	e.closed = true
-	e.channel.Close()
-}
+func (c *channel) Publish(message Msg) error {
+	if c.exchange == nil {
+		panic("can not use this channel to publish msg")
+	}
 
-func (e *exchange) Publish(ctx context.Context, message Msg) error {
+	e := c.exchange
+
 	msg, err := e.marshalFunc(message.Body)
 	if err != nil {
 		logrus.WithError(err).Infof("Marshal message failed: %v", message.Body)
@@ -161,19 +91,20 @@ func (e *exchange) Publish(ctx context.Context, message Msg) error {
 		headers[k] = v
 	}
 
-	err = e.channel.Publish(
-		e.name,       // exchange
-		e.routingKey, // routing key
-		false,        // mandatory
-		false,        // immediate
+	err = c.c.Publish(
+		e.name,             // exchange
+		message.RoutingKey, // routing key
+		false,              // mandatory
+		false,              // immediate
 		amqp.Publishing{
 			Headers:      headers,
 			DeliveryMode: 2,
 			ContentType:  "application/json",
 			Body:         msg,
+			Priority:     uint8(message.Priority),
 		})
 	if err != nil {
-		logrus.WithError(err).Infof("Publish message to queue failed: %v", message.Body)
+		logrus.WithError(err).Infof("Publish message to exchange (%s) failed: %v", c.exchange.name, message.Body)
 		return err
 	}
 
@@ -181,7 +112,7 @@ func (e *exchange) Publish(ctx context.Context, message Msg) error {
 }
 
 // To retry forever, set numOfRetries a number which is less than 0
-func (e *exchange) PublishWithRetry(ctx context.Context, message Msg, numOfRetries int64) error {
+func (c *channel) PublishWithRetry(message Msg, numOfRetries int64) error {
 	var b backoff.BackOff
 	if numOfRetries < 0 {
 		b = backoff.NewExponentialBackOff()
@@ -190,12 +121,12 @@ func (e *exchange) PublishWithRetry(ctx context.Context, message Msg, numOfRetri
 	}
 
 	err := backoff.RetryNotify(func() error {
-		return e.Publish(ctx, message)
+		return c.Publish(message)
 	}, b, func(err error, t time.Duration) {
-		fmt.Printf("Rabbitmq publish fail err = %v, retry after %v, message: %s\n", err, t, message)
+		fmt.Printf("Rabbitmq publish fail err = %v, retry after %v, message: %v\n", err, t, message)
 	})
 	if err != nil {
-		logrus.WithError(err).Infof("Publish message to queue failed: %s", message)
+		logrus.WithError(err).Infof("Publish message to queue failed: %v", message)
 		return err
 	}
 
