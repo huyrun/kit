@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/huypher/kit/log"
 	"github.com/streadway/amqp"
 )
 
@@ -25,7 +25,7 @@ func createChannel(conn *amqp.Connection) *amqp.Channel {
 	for {
 		chann, err := conn.Channel()
 		if err != nil {
-			logrus.WithError(err).Infof("Open channel failed. Retrying in %s... ", retry_create_channel_after.String())
+			log.Error(err).Infof("Open channel failed. Retrying in %s...", retry_create_channel_after.String())
 			time.Sleep(retry_create_channel_after)
 			continue
 		}

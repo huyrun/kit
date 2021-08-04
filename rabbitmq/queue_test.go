@@ -8,7 +8,7 @@ import (
 )
 
 func Test_channel_Consume(t *testing.T) {
-	r1 := NewRabbitmq(Address(addr))
+	r1 := NewRabbitmq(Address(addr), Logging(true))
 	c := r1.CreatePublisher(
 		ExchangeName("exchange_direct"),
 		ExchangeKind(ExchangeDirect),
@@ -18,22 +18,22 @@ func Test_channel_Consume(t *testing.T) {
 	r2 := NewRabbitmq(Address(addr))
 	q := r2.CreateConsumer(
 		QueueName("queue_test1"),
-		PriorityQueue(200),
+		PriorityQueue(255),
 		RegisterHandlerFunc(func(bytes []byte) error {
 			fmt.Println(string(bytes))
-			time.Sleep(2 * time.Second)
+			time.Sleep(1 * time.Second)
 			return nil
 		}),
 	)
 
-	q.Bind("exchange_direct", "q1")
+	q.Bind("exchange_direct", "routing_key")
 
 	messages := []Msg{}
 	for i := 1; i <= 100; i++ {
 		messages = append(messages, Msg{
 			Headers:    Header{},
 			Body:       i,
-			RoutingKey: "q1",
+			RoutingKey: "routing_key",
 			Priority:   i,
 		})
 	}

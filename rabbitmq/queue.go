@@ -3,10 +3,12 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
-	"kit/util"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/huypher/kit/log"
+
+	"github.com/huypher/kit/util"
+
 	"github.com/streadway/amqp"
 )
 
@@ -83,10 +85,9 @@ func (c *channel) executeMessageConsumer(deliveries <-chan amqp.Delivery) {
 
 	for {
 		for delivery := range deliveries {
-			logrus.Infof("Rabbitmq consumer (%s) consume value: %v", q.name, string(delivery.Body))
 			err := q.handlerFunc(delivery.Body)
 			if err != nil {
-				logrus.WithError(err).Infof("handle message error at queue (%s) %s", q.name, string(delivery.Body))
+				log.Error(err).Infof("handle message error at queue (%s) %s", q.name, string(delivery.Body))
 				time.Sleep(delay_nack * time.Millisecond)
 				delivery.Nack(false, true)
 				continue
@@ -96,7 +97,7 @@ func (c *channel) executeMessageConsumer(deliveries <-chan amqp.Delivery) {
 	}
 }
 
-func (c *channel) declareDurableQueue() error {
+func (c *channel) createQueue() error {
 	q := c.queue
 	if q == nil {
 		panic("queue is nil")
@@ -112,7 +113,7 @@ func (c *channel) declareDurableQueue() error {
 	)
 
 	if err != nil {
-		logrus.WithError(err).Infof("Queue declaration failed: %s", q.name)
+		log.Error(err).Infof("Queue declaration failed: %s", q.name)
 		return err
 	}
 

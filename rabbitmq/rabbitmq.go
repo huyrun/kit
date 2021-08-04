@@ -1,11 +1,9 @@
 package rabbitmq
 
 import (
-	"fmt"
-	"log"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"github.com/huypher/kit/log"
 
 	"github.com/streadway/amqp"
 )
@@ -50,6 +48,8 @@ type rabbitmq struct {
 	connection      *amqp.Connection
 	errorConnection chan *amqp.Error
 	channels        []*channel
+
+	logging bool
 }
 
 type Option func(*rabbitmq)
@@ -61,10 +61,20 @@ func NewRabbitmq(options ...Option) *rabbitmq {
 		o(r)
 	}
 
+	if r.logging {
+		log.LoggingMode(r.logging)
+	}
+
 	r.connect()
 	go r.channelsFaultTolerance()
 
 	return r
+}
+
+func Logging(mode bool) Option {
+	return func(r *rabbitmq) {
+		r.logging = mode
+	}
 }
 
 func Address(addr string) Option {
@@ -78,7 +88,7 @@ func (r *rabbitmq) connect() {
 	for {
 		conn, err := amqp.Dial(r.address)
 		if err != nil {
-			logrus.WithError(err).Infof("Connection to rabbitmq failed. Retrying in %s... ", retry_connect_after.String())
+			log.Error(err).Infof("Connection to rabbitmq failed. Retrying in %s... ", retry_connect_after.String())
 			time.Sleep(retry_connect_after)
 			continue
 		}
@@ -87,7 +97,7 @@ func (r *rabbitmq) connect() {
 		r.errorConnection = make(chan *amqp.Error)
 		r.connection.NotifyClose(r.errorConnection)
 		go r.reconnector()
-		log.Println("Rabbitmq connection established!")
+		log.Info("Rabbitmq connection established!")
 
 		return
 	}
@@ -96,17 +106,17 @@ func (r *rabbitmq) connect() {
 func (r *rabbitmq) reconnector() {
 	amqpErr := <-r.errorConnection
 	if amqpErr != nil {
-		logrus.Infof("Reconnecting after connection closed by err: %v", amqpErr.Error())
+		log.Infof("Reconnecting after connection closed by err: %v", amqpErr.Error())
 	}
 
 	// recovery connection
 	r.connection.Close()
-	log.Printf("Reconnecting...")
+	log.Info("Reconnecting...")
 	r.connect()
 }
 
 func (r *rabbitmq) Close() {
-	log.Println("Closing rabbitmq connection")
+	log.Info("Closing rabbitmq connection")
 	for _, c := range r.channels {
 		c.c.Close()
 	}
@@ -128,14 +138,14 @@ func (r *rabbitmq) newChannel(options ...ChannOption) *channel {
 	if channel.exchange != nil && channel.exchange.kind != ExchangeDefault {
 		err := channel.createExchange()
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Error(err)
 		}
 	}
 
 	if channel.queue != nil {
 		err := channel.createQueue()
 		if err != nil {
-			fmt.Println(err.Error())
+			log.Error(err)
 		}
 	}
 
@@ -153,7 +163,7 @@ func (r *rabbitmq) channelsFaultTolerance() {
 					for r.connection.IsClosed() {
 						continue
 					}
-					logrus.Infof("Re-create after channel closed by err: %v", amqpErr.Error())
+					log.Infof("Re-create after channel closed by err: %v", amqpErr.Error())
 					r.resetup(c)
 				}
 			default:

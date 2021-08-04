@@ -1,11 +1,11 @@
 package rabbitmq
 
 import (
-	"fmt"
 	"time"
 
+	"github.com/huypher/kit/log"
+
 	"github.com/cenkalti/backoff"
-	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 )
 
@@ -57,22 +57,6 @@ func (c *channel) createExchange() error {
 	return nil
 }
 
-func (c *channel) createQueue() error {
-	q := c.queue
-	_, err := c.c.QueueDeclare(
-		q.name,
-		true,
-		false,
-		false,
-		false,
-		q.args,
-	)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (c *channel) Publish(message Msg) error {
 	if c.exchange == nil {
 		panic("can not use this channel to publish msg")
@@ -82,7 +66,7 @@ func (c *channel) Publish(message Msg) error {
 
 	msg, err := e.marshalFunc(message.Body)
 	if err != nil {
-		logrus.WithError(err).Infof("Marshal message failed: %v", message.Body)
+		log.Error(err).Infof("Marshal message failed: %v", message.Body)
 		return err
 	}
 
@@ -104,7 +88,7 @@ func (c *channel) Publish(message Msg) error {
 			Priority:     uint8(message.Priority),
 		})
 	if err != nil {
-		logrus.WithError(err).Infof("Publish message to exchange (%s) failed: %v", c.exchange.name, message.Body)
+		log.Error(err).Infof("Publish message to exchange (%s) failed: %v", c.exchange.name, message.Body)
 		return err
 	}
 
@@ -123,10 +107,10 @@ func (c *channel) PublishWithRetry(message Msg, numOfRetries int64) error {
 	err := backoff.RetryNotify(func() error {
 		return c.Publish(message)
 	}, b, func(err error, t time.Duration) {
-		fmt.Printf("Rabbitmq publish fail err = %v, retry after %v, message: %v\n", err, t, message)
+		log.Infof("Rabbitmq publish fail err = %v, retry after %v, message: %v\n", err, t, message)
 	})
 	if err != nil {
-		logrus.WithError(err).Infof("Publish message to queue failed: %v", message)
+		log.Error(err).Infof("Publish message to queue failed: %v", message)
 		return err
 	}
 

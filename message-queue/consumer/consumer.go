@@ -2,11 +2,12 @@ package consumer
 
 import (
 	"fmt"
-	message_queue "kit/message-queue"
-	"kit/util"
-	"log"
 
-	"github.com/sirupsen/logrus"
+	"github.com/huypher/kit/log"
+
+	"github.com/huypher/kit/util"
+
+	message_queue "github.com/huypher/kit/message-queue"
 )
 
 type Handler func(msg []byte) error
@@ -50,7 +51,7 @@ func HandlerFunc(handler Handler) Option {
 }
 
 func (c *consumer) Start() {
-	log.Printf("Consumer %s@%s starting...", c.name, c.id)
+	log.Infof("Consumer %s@%s starting...", c.name, c.id)
 
 	if c.handler == nil {
 		panic(fmt.Sprintf("Consumer %s@%s don't have handler is nil", c.name, c.id))
@@ -61,13 +62,13 @@ func (c *consumer) Start() {
 	}
 
 	go func() {
-		log.Printf("Consumer %s@%s started", c.name, c.id)
+		log.Infof("Consumer %s@%s started", c.name, c.id)
 		for {
 			msg, ok := <-c.channel
 			if ok {
 				err := c.handler(msg)
 				if err != nil {
-					logrus.WithError(err).Errorf("Handle msg failed %s", string(msg))
+					log.Error(err).Infof("Handle msg failed %s", string(msg))
 					go c.requeue(msg)
 				}
 			} else {
