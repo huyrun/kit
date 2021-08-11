@@ -7,7 +7,7 @@ import (
 
 func Test_channel_Publish(t *testing.T) {
 	r := NewRabbitmq(Address(addr))
-	c := r.CreatePublisher(
+	c := r.CreateProducer(
 		ExchangeName("exchange_fanout"),
 		ExchangeKind(ExchangeFanout),
 		RegisterMarshalFunc(json.Marshal),

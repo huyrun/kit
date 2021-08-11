@@ -9,7 +9,7 @@ import (
 
 func Test_channel_Consume(t *testing.T) {
 	r1 := NewRabbitmq(Address(addr), Logging(true))
-	c := r1.CreatePublisher(
+	c := r1.CreateProducer(
 		ExchangeName("exchange_direct"),
 		ExchangeKind(ExchangeDirect),
 		RegisterMarshalFunc(json.Marshal),
@@ -62,7 +62,7 @@ func Test_channel_Consume(t *testing.T) {
 
 func Test_Delay_Message(t *testing.T) {
 	r1 := NewRabbitmq(Address(addr), Logging(true))
-	c := r1.CreatePublisher(
+	c := r1.CreateProducer(
 		ExchangeName("exchange_direct"),
 		ExchangeKind(ExchangeDirect),
 		ExchangeDelayedType(),

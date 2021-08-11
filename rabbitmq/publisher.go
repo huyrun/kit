@@ -5,7 +5,7 @@ type Producer interface {
 	PublishWithRetry(message Msg, numOfRetries int64) error
 }
 
-func (r *rabbitmq) CreatePublisher(options ...ChannOption) Producer {
+func (r *rabbitmq) CreateProducer(options ...ChannOption) Producer {
 	options = append([]ChannOption{initExchange()}, options...)
 	return r.newChannel(options...)
 }

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test_rabbitmq_CreatePublisher(t *testing.T) {
+func Test_rabbitmq_CreateProducer(t *testing.T) {
 	r := NewRabbitmq(Address(addr))
 
 	type args struct {
@@ -32,8 +32,8 @@ func Test_rabbitmq_CreatePublisher(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := r.CreatePublisher(tt.args.options...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CreatePublisher() = %v, want %v", got, tt.want)
+			if got := r.CreateProducer(tt.args.options...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CreateProducer() = %v, want %v", got, tt.want)
 			}
 		})
 	}
