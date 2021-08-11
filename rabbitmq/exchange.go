@@ -9,6 +9,11 @@ import (
 	"github.com/streadway/amqp"
 )
 
+const (
+	xDelayedMessage = "x-delayed-message"
+	xDelayedType    = "x-delayed-type"
+)
+
 type exchange struct {
 	name          string
 	kind          ExchangeType
@@ -53,8 +58,8 @@ func (c *channel) createExchange() error {
 
 	exchangeType := string(e.kind)
 	if e.isDelayedType {
-		exchangeType = "x-delayed-message"
-		e.args["x-delayed-type"] = string(e.kind)
+		exchangeType = xDelayedMessage
+		e.args[xDelayedType] = string(e.kind)
 	}
 
 	err := c.c.ExchangeDeclare(
