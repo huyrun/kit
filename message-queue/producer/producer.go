@@ -2,10 +2,12 @@ package producer
 
 import (
 	"encoding/json"
-	message_queue "kit/message-queue"
-	"kit/message-queue/consumer"
-	"kit/util"
 	"sync"
+
+	message_queue "github.com/huypher/kit/message-queue"
+
+	"github.com/huypher/kit/message-queue/consumer"
+	"github.com/huypher/kit/util"
 )
 
 type MarshalFunc func(interface{}) ([]byte, error)
