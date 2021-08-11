@@ -16,7 +16,7 @@ func Test_channel_Publish(t *testing.T) {
 	messages := []Msg{}
 	for i := 0; i < 100; i++ {
 		messages = append(messages, Msg{
-			Headers:    Header{},
+			headers:    header{},
 			Body:       i,
 			RoutingKey: "",
 		})

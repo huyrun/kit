@@ -27,21 +27,6 @@ const (
 	ExchangeHeaders ExchangeType = amqp.ExchangeHeaders
 )
 
-type Header map[string]interface{}
-
-type Body interface{}
-
-type marshalFunc func(interface{}) ([]byte, error)
-
-type handlerFunc func([]byte) error
-
-type Msg struct {
-	Headers    Header
-	Body       Body
-	RoutingKey string
-	Priority   int
-}
-
 // keep rabbitmq connect
 type rabbitmq struct {
 	address         string
@@ -93,11 +78,12 @@ func (r *rabbitmq) connect() {
 			continue
 		}
 
+		log.Info("Rabbitmq connection established!")
+
 		r.connection = conn
 		r.errorConnection = make(chan *amqp.Error)
 		r.connection.NotifyClose(r.errorConnection)
 		go r.reconnector()
-		log.Info("Rabbitmq connection established!")
 
 		return
 	}

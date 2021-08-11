@@ -9,6 +9,7 @@ type LogBuilder interface {
 	Error(err error) LogBuilder
 	Info(info string) LogBuilder
 	Infof(format string, data ...interface{}) LogBuilder
+
 	build()
 	reset()
 }
@@ -34,12 +35,12 @@ func (l *log) Infof(format string, data ...interface{}) LogBuilder {
 func (l *log) build() {
 	log := strings.Builder{}
 	if l.err != nil {
-		log.WriteString(fmt.Sprintf("err = %s/n", l.err.Error()))
+		log.WriteString(fmt.Sprintf("err = %s\n", l.err.Error()))
 	}
 	if len(l.info) > 0 {
-		log.WriteString(fmt.Sprintf("info = %s/n", l.info))
+		log.WriteString(fmt.Sprintf("info = %s\n", l.info))
 	}
-	fmt.Println(log.String())
+	fmt.Print(log.String())
 	l.reset()
 }
 

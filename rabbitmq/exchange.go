@@ -10,15 +10,17 @@ import (
 )
 
 type exchange struct {
-	name string
-	kind ExchangeType
-
-	marshalFunc marshalFunc
+	name          string
+	kind          ExchangeType
+	args          amqp.Table
+	isDelayedType bool
+	marshalFunc   marshalFunc
 }
 
 func initExchange() ChannOption {
 	return func(c *channel) {
 		c.exchange = new(exchange)
+		c.exchange.args = make(amqp.Table)
 	}
 }
 
@@ -40,16 +42,29 @@ func RegisterMarshalFunc(marshalFunc marshalFunc) ChannOption {
 	}
 }
 
+func ExchangeDelayedType() ChannOption {
+	return func(c *channel) {
+		c.exchange.isDelayedType = true
+	}
+}
+
 func (c *channel) createExchange() error {
 	e := c.exchange
+
+	exchangeType := string(e.kind)
+	if e.isDelayedType {
+		exchangeType = "x-delayed-message"
+		e.args["x-delayed-type"] = string(e.kind)
+	}
+
 	err := c.c.ExchangeDeclare(
 		e.name,
-		string(e.kind),
+		exchangeType,
 		true,
 		true,
 		false,
 		false,
-		amqp.Table{},
+		e.args,
 	)
 	if err != nil {
 		return err
@@ -71,7 +86,7 @@ func (c *channel) Publish(message Msg) error {
 	}
 
 	headers := amqp.Table{}
-	for k, v := range message.Headers {
+	for k, v := range message.headers {
 		headers[k] = v
 	}
 
