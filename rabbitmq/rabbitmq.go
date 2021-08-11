@@ -14,7 +14,18 @@ const (
 )
 
 type Rabbitmq interface {
+	RabbitmqProducer
+	RabbitmqConsumer
+}
+
+type RabbitmqProducer interface {
 	Close()
+	CreateProducer(options ...ChannOption) Producer
+}
+
+type RabbitmqConsumer interface {
+	Close()
+	CreateConsumer(options ...ChannOption) Consumer
 }
 
 type ExchangeType string
