@@ -6,9 +6,9 @@ const (
 	min = 60000
 )
 
-type header map[string]interface{}
+type Header map[string]interface{}
 
-type body interface{}
+type Body interface{}
 
 type marshalFunc func(interface{}) ([]byte, error)
 
@@ -16,14 +16,14 @@ type handlerFunc func([]byte) error
 
 type Message interface {
 	MessageHeaderInit()
-	MessageHeader() header
-	MessageBody() body
+	MessageHeader() Header
+	MessageBody() Body
 	MessageRoutingKey() string
 	MessagePriority() int
 }
 
 func delay(m Message, d int) {
-	setHeader(m, header{
+	setHeader(m, Header{
 		XDelayHeader: d,
 	})
 }

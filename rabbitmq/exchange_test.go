@@ -12,9 +12,9 @@ type msg struct {
 	priority   int
 }
 
-func (m *msg) MessageHeaderInit()        { m.header = make(header) }
-func (m *msg) MessageHeader() header     { return m.header }
-func (m *msg) MessageBody() body         { return m.body }
+func (m *msg) MessageHeaderInit()        { m.header = make(Header) }
+func (m *msg) MessageHeader() Header     { return m.header }
+func (m *msg) MessageBody() Body         { return m.body }
 func (m *msg) MessageRoutingKey() string { return m.routingKey }
 func (m *msg) MessagePriority() int      { return m.priority }
 
@@ -29,7 +29,7 @@ func Test_channel_Publish(t *testing.T) {
 	messages := []Message{}
 	for i := 0; i < 100; i++ {
 		msg := &msg{
-			header:     header{},
+			header:     Header{},
 			body:       i,
 			routingKey: "",
 		}

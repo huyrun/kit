@@ -31,7 +31,7 @@ func Test_channel_Consume(t *testing.T) {
 	messages := []Message{}
 	for i := 1; i <= 100; i++ {
 		messages = append(messages, &msg{
-			header:     header{},
+			header:     Header{},
 			body:       i,
 			routingKey: "routing_key",
 			priority:   i,

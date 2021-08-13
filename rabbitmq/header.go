@@ -4,7 +4,7 @@ const (
 	XDelayHeader = "x-delay"
 )
 
-func setHeader(msg Message, headers ...header) {
+func setHeader(msg Message, headers ...Header) {
 	if msg.MessageHeader() == nil {
 		return
 	}
