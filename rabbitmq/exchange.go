@@ -77,38 +77,43 @@ func (c *channel) createExchange() error {
 	return nil
 }
 
-func (c *channel) Publish(message Msg) error {
+func (c *channel) Publish(message Message) error {
 	if c.exchange == nil {
 		panic("can not use this channel to publish msg")
 	}
 
 	e := c.exchange
 
-	msg, err := e.marshalFunc(message.Body())
+	msgBody := message.MessageBody()
+	msgHeader := message.MessageHeader()
+	msgRoutingKey := message.MessageRoutingKey()
+	msgPriority := message.MessagePriority()
+
+	msg, err := e.marshalFunc(msgBody)
 	if err != nil {
-		log.Error(err).Infof("Marshal message failed: %v", message.Body())
+		log.Error(err).Infof("Marshal message failed: %v", msgBody)
 		return err
 	}
 
 	headers := amqp.Table{}
-	for k, v := range message.Header() {
-		headers[k.String()] = v
+	for k, v := range msgHeader {
+		headers[k] = v
 	}
 
 	err = c.c.Publish(
-		e.name,               // exchange
-		message.RoutingKey(), // routing key
-		false,                // mandatory
-		false,                // immediate
+		e.name,        // exchange
+		msgRoutingKey, // routing key
+		false,         // mandatory
+		false,         // immediate
 		amqp.Publishing{
 			Headers:      headers,
 			DeliveryMode: 2,
 			ContentType:  "application/json",
 			Body:         msg,
-			Priority:     uint8(message.Priority()),
+			Priority:     uint8(msgPriority),
 		})
 	if err != nil {
-		log.Error(err).Infof("Publish message to exchange (%s) failed: %v", c.exchange.name, message.Body)
+		log.Error(err).Infof("Publish message to exchange (%s) failed: %v", c.exchange.name, msgBody)
 		return err
 	}
 
@@ -116,7 +121,7 @@ func (c *channel) Publish(message Msg) error {
 }
 
 // To retry forever, set numOfRetries a number which is less than 0
-func (c *channel) PublishWithRetry(message Msg, numOfRetries int64) error {
+func (c *channel) PublishWithRetry(message Message, numOfRetries int64) error {
 	var b backoff.BackOff
 	if numOfRetries < 0 {
 		b = backoff.NewExponentialBackOff()

@@ -6,17 +6,17 @@ import (
 )
 
 type msg struct {
-	header     map[HeaderType]interface{}
-	body       body
+	header     map[string]interface{}
+	body       interface{}
 	routingKey string
 	priority   int
 }
 
-func (m *msg) InitHeader()        { m.header = make(header) }
-func (m *msg) Header() header     { return m.header }
-func (m *msg) Body() body         { return m.body }
-func (m *msg) RoutingKey() string { return m.routingKey }
-func (m *msg) Priority() int      { return m.priority }
+func (m *msg) MessageHeaderInit()        { m.header = make(header) }
+func (m *msg) MessageHeader() header     { return m.header }
+func (m *msg) MessageBody() body         { return m.body }
+func (m *msg) MessageRoutingKey() string { return m.routingKey }
+func (m *msg) MessagePriority() int      { return m.priority }
 
 func Test_channel_Publish(t *testing.T) {
 	r := NewRabbitmq(Address(addr))
@@ -26,7 +26,7 @@ func Test_channel_Publish(t *testing.T) {
 		RegisterMarshalFunc(json.Marshal),
 	)
 
-	messages := []Msg{}
+	messages := []Message{}
 	for i := 0; i < 100; i++ {
 		msg := &msg{
 			header:     header{},
@@ -37,7 +37,7 @@ func Test_channel_Publish(t *testing.T) {
 	}
 
 	type args struct {
-		messages []Msg
+		messages []Message
 	}
 	tests := []struct {
 		name    string

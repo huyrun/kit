@@ -28,7 +28,7 @@ func Test_channel_Consume(t *testing.T) {
 
 	q.Bind("exchange_direct", "routing_key")
 
-	messages := []Msg{}
+	messages := []Message{}
 	for i := 1; i <= 100; i++ {
 		messages = append(messages, &msg{
 			header:     header{},
@@ -84,7 +84,7 @@ func Test_Delay_Message(t *testing.T) {
 		body:       "msg1",
 		routingKey: "routing_key",
 	}
-	msg1.InitHeader()
+	msg1.MessageHeaderInit()
 	DelaySecond(&msg1, 10)
 
 	msg2 := msg{
@@ -92,7 +92,7 @@ func Test_Delay_Message(t *testing.T) {
 		routingKey: "routing_key",
 	}
 
-	messages := []Msg{&msg1, &msg2}
+	messages := []Message{&msg1, &msg2}
 
 	tests := []struct {
 		name string

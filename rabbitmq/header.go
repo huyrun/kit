@@ -1,29 +1,25 @@
 package rabbitmq
 
-type HeaderType string
-
-func (h HeaderType) String() string {
-	return string(h)
-}
-
 const (
-	XDelayHeader HeaderType = "x-delay"
+	XDelayHeader = "x-delay"
 )
 
-func setHeader(msg Msg, headers ...header) {
-	if msg.Header() == nil {
+func setHeader(msg Message, headers ...header) {
+	if msg.MessageHeader() == nil {
 		return
 	}
 
 	for _, header := range headers {
 		for k, v := range header {
-			msg.Header()[k] = v
+			msg.MessageHeader()[k] = v
 		}
 	}
 }
 
-func delay(m Msg, d int) {
-	setHeader(m, header{
-		XDelayHeader: d,
-	})
+func delHeader(msg Message, headerType string) {
+	if msg.MessageHeader() == nil {
+		return
+	}
+
+	delete(msg.MessageHeader(), headerType)
 }

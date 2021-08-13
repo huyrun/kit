@@ -1,8 +1,8 @@
 package rabbitmq
 
 type Producer interface {
-	Publish(message Msg) error
-	PublishWithRetry(message Msg, numOfRetries int64) error
+	Publish(message Message) error
+	PublishWithRetry(message Message, numOfRetries int64) error
 }
 
 func (r *rabbitmq) CreateProducer(options ...ChannOption) Producer {
