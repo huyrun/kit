@@ -5,6 +5,19 @@ import (
 	"testing"
 )
 
+type msg struct {
+	header     map[HeaderType]interface{}
+	body       body
+	routingKey string
+	priority   int
+}
+
+func (m *msg) InitHeader()        { m.header = make(header) }
+func (m *msg) Header() header     { return m.header }
+func (m *msg) Body() body         { return m.body }
+func (m *msg) RoutingKey() string { return m.routingKey }
+func (m *msg) Priority() int      { return m.priority }
+
 func Test_channel_Publish(t *testing.T) {
 	r := NewRabbitmq(Address(addr))
 	c := r.CreateProducer(
@@ -15,11 +28,12 @@ func Test_channel_Publish(t *testing.T) {
 
 	messages := []Msg{}
 	for i := 0; i < 100; i++ {
-		messages = append(messages, Msg{
-			headers:    header{},
-			Body:       i,
-			RoutingKey: "",
-		})
+		msg := &msg{
+			header:     header{},
+			body:       i,
+			routingKey: "",
+		}
+		messages = append(messages, msg)
 	}
 
 	type args struct {

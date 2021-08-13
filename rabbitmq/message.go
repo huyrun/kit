@@ -6,7 +6,7 @@ const (
 	min = 1000 * 60
 )
 
-type header map[string]interface{}
+type header map[HeaderType]interface{}
 
 type body interface{}
 
@@ -14,30 +14,22 @@ type marshalFunc func(interface{}) ([]byte, error)
 
 type handlerFunc func([]byte) error
 
-type Msg struct {
-	headers header
-
-	Body       body
-	RoutingKey string
-	Priority   int
+type Msg interface {
+	InitHeader()
+	Header() header
+	Body() body
+	RoutingKey() string
+	Priority() int
 }
 
-func (m *Msg) delay(d int) {
-	if m.headers == nil {
-		m.headers = make(header)
-	}
-
-	m.headers["x-delay"] = d
+func DelayMilisecond(m Msg, d int) {
+	delay(m, d*ms)
 }
 
-func (m *Msg) DelayMilisecond(d int) {
-	m.delay(d * ms)
+func DelaySecond(m Msg, d int) {
+	delay(m, d*s)
 }
 
-func (m *Msg) DelaySecond(d int) {
-	m.delay(d * s)
-}
-
-func (m *Msg) DelayMinute(d int) {
-	m.delay(d * min)
+func DelayMinute(m Msg, d int) {
+	delay(m, d*min)
 }

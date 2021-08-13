@@ -84,28 +84,28 @@ func (c *channel) Publish(message Msg) error {
 
 	e := c.exchange
 
-	msg, err := e.marshalFunc(message.Body)
+	msg, err := e.marshalFunc(message.Body())
 	if err != nil {
-		log.Error(err).Infof("Marshal message failed: %v", message.Body)
+		log.Error(err).Infof("Marshal message failed: %v", message.Body())
 		return err
 	}
 
 	headers := amqp.Table{}
-	for k, v := range message.headers {
-		headers[k] = v
+	for k, v := range message.Header() {
+		headers[k.String()] = v
 	}
 
 	err = c.c.Publish(
-		e.name,             // exchange
-		message.RoutingKey, // routing key
-		false,              // mandatory
-		false,              // immediate
+		e.name,               // exchange
+		message.RoutingKey(), // routing key
+		false,                // mandatory
+		false,                // immediate
 		amqp.Publishing{
 			Headers:      headers,
 			DeliveryMode: 2,
 			ContentType:  "application/json",
 			Body:         msg,
-			Priority:     uint8(message.Priority),
+			Priority:     uint8(message.Priority()),
 		})
 	if err != nil {
 		log.Error(err).Infof("Publish message to exchange (%s) failed: %v", c.exchange.name, message.Body)
