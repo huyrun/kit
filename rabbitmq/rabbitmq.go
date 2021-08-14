@@ -20,12 +20,12 @@ type Rabbitmq interface {
 
 type RabbitmqProducer interface {
 	Close()
-	CreateProducer(options ...ChannOption) Producer
+	CreateProducer(options ...ChannOption) *producer
 }
 
 type RabbitmqConsumer interface {
 	Close()
-	CreateConsumer(options ...ChannOption) Consumer
+	CreateConsumer(options ...ChannOption) *consumer
 }
 
 type ExchangeType string
@@ -176,6 +176,6 @@ func (r *rabbitmq) resetup(channel *channel) {
 	channel.c.NotifyClose(channel.cError)
 
 	if channel.queue != nil {
-		channel.Consume()
+		channel.consume()
 	}
 }

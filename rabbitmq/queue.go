@@ -51,7 +51,7 @@ func RegisterHandlerFunc(handlerFunc handlerFunc) ChannOption {
 	}
 }
 
-func (c *channel) Consume() {
+func (c *channel) consume() {
 	go c.executeMessageConsumer(c.registerQueueConsumer())
 }
 
@@ -126,7 +126,7 @@ func (c *channel) createQueue() error {
 	return nil
 }
 
-func (c *channel) Bind(exchangeName, routingKey string) error {
+func (c *channel) bind(exchangeName, routingKey string) error {
 	if c.queue == nil {
 		panic("queue is nil")
 	}

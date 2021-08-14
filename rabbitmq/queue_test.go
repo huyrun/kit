@@ -17,7 +17,7 @@ func Test_channel_Consume(t *testing.T) {
 
 	r2 := NewRabbitmq(Address(addr), Logging(true))
 	q := r2.CreateConsumer(
-		QueueName("queue_test1"),
+		QueueName("queue_test_direct"),
 		PriorityQueue(255),
 		RegisterHandlerFunc(func(bytes []byte) error {
 			fmt.Println(string(bytes))
@@ -63,7 +63,7 @@ func Test_channel_Consume(t *testing.T) {
 func Test_Delay_Message(t *testing.T) {
 	r1 := NewRabbitmq(Address(addr), Logging(true))
 	c := r1.CreateProducer(
-		ExchangeName("exchange_direct"),
+		ExchangeName("exchange_direct_delay"),
 		ExchangeKind(ExchangeDirect),
 		ExchangeDelayedType(),
 		RegisterMarshalFunc(json.Marshal),
@@ -71,14 +71,14 @@ func Test_Delay_Message(t *testing.T) {
 
 	r2 := NewRabbitmq(Address(addr))
 	q := r2.CreateConsumer(
-		QueueName("queue_test1"),
+		QueueName("queue_test_delay"),
 		RegisterHandlerFunc(func(bytes []byte) error {
 			fmt.Println(string(bytes))
 			return nil
 		}),
 	)
 
-	q.Bind("exchange_direct", "routing_key")
+	q.Bind("exchange_direct_delay", "routing_key")
 
 	msg1 := msg{
 		body:       "msg1",

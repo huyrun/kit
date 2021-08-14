@@ -15,7 +15,7 @@ func Test_rabbitmq_CreateConsumer(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want Consumer
+		want *consumer
 	}{
 		// TODO: Add test cases.
 		{

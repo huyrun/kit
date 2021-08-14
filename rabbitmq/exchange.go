@@ -77,7 +77,7 @@ func (c *channel) createExchange() error {
 	return nil
 }
 
-func (c *channel) Publish(message Message) error {
+func (c *channel) publish(message Message) error {
 	if c.exchange == nil {
 		panic("can not use this channel to publish msg")
 	}
@@ -121,7 +121,7 @@ func (c *channel) Publish(message Message) error {
 }
 
 // To retry forever, set numOfRetries a number which is less than 0
-func (c *channel) PublishWithRetry(message Message, numOfRetries int64) error {
+func (c *channel) publishWithRetry(message Message, numOfRetries int64) error {
 	var b backoff.BackOff
 	if numOfRetries < 0 {
 		b = backoff.NewExponentialBackOff()
@@ -130,7 +130,7 @@ func (c *channel) PublishWithRetry(message Message, numOfRetries int64) error {
 	}
 
 	err := backoff.RetryNotify(func() error {
-		return c.Publish(message)
+		return c.publish(message)
 	}, b, func(err error, t time.Duration) {
 		log.Infof("Rabbitmq publish fail err = %v, retry after %v, message: %v\n", err, t, message)
 	})

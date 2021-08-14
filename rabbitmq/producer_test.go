@@ -15,7 +15,7 @@ func Test_rabbitmq_CreateProducer(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want Producer
+		want *producer
 	}{
 		// TODO: Add test cases.
 		{
