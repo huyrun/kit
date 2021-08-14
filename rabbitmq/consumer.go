@@ -1,5 +1,10 @@
 package rabbitmq
 
+type Consumer interface {
+	Consume()
+	Bind(exchangeName, routingKey string) error
+}
+
 type consumer struct {
 	c *channel
 }

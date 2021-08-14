@@ -1,5 +1,10 @@
 package rabbitmq
 
+type Producer interface {
+	Publish(msg Message) error
+	PublishWithRetry(msg Message, numOfRetries int64) error
+}
+
 type producer struct {
 	c *channel
 }
@@ -13,6 +18,6 @@ func (p *producer) Publish(msg Message) error {
 	return p.c.publish(msg)
 }
 
-func (p *producer) PublishWithRetry(msg Message, numsOfRetries int64) error {
-	return p.c.publishWithRetry(msg, numsOfRetries)
+func (p *producer) PublishWithRetry(msg Message, numOfRetries int64) error {
+	return p.c.publishWithRetry(msg, numOfRetries)
 }
