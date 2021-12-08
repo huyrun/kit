@@ -5,7 +5,7 @@ import (
 
 	"github.com/huypher/kit/log"
 
-	"github.com/huypher/kit/util"
+	"github.com/huypher/kit/utils"
 
 	message_queue "github.com/huypher/kit/message-queue"
 )
@@ -28,7 +28,7 @@ type Option func(*consumer)
 
 func NewConsumer(opts ...Option) *consumer {
 	c := &consumer{
-		id: util.RandomString(10),
+		id: utils.RandomString(10),
 	}
 
 	for _, opt := range opts {

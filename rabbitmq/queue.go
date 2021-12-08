@@ -7,7 +7,7 @@ import (
 
 	"github.com/huypher/kit/log"
 
-	"github.com/huypher/kit/util"
+	"github.com/huypher/kit/utils"
 
 	"github.com/streadway/amqp"
 )
@@ -141,5 +141,5 @@ func (c *channel) bind(exchangeName, routingKey string) error {
 }
 
 func genConsumerID(queueName string) string {
-	return fmt.Sprintf("%s-%s", queueName, util.RandomString(10))
+	return fmt.Sprintf("%s-%s", queueName, utils.RandomString(10))
 }

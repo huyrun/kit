@@ -7,7 +7,7 @@ import (
 	message_queue "github.com/huypher/kit/message-queue"
 
 	"github.com/huypher/kit/message-queue/consumer"
-	"github.com/huypher/kit/util"
+	"github.com/huypher/kit/utils"
 )
 
 type MarshalFunc func(interface{}) ([]byte, error)
@@ -30,7 +30,7 @@ type Option func(*producer)
 
 func NewProducer(otps ...Option) *producer {
 	p := &producer{
-		id:          util.RandomString(10),
+		id:          utils.RandomString(10),
 		channels:    make([]message_queue.Queue, 0),
 		next:        -1,
 		marshalFunc: json.Marshal,
