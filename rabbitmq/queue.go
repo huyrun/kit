@@ -3,11 +3,10 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
+	"github.com/huypher/kit/utils"
 	"time"
 
 	"github.com/huypher/kit/log"
-
-	"github.com/huypher/kit/utils"
 
 	"github.com/streadway/amqp"
 )

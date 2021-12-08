@@ -2,10 +2,9 @@ package consumer
 
 import (
 	"fmt"
+	"github.com/huypher/kit/utils"
 
 	"github.com/huypher/kit/log"
-
-	"github.com/huypher/kit/utils"
 
 	message_queue "github.com/huypher/kit/message-queue"
 )
