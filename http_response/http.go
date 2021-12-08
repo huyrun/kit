@@ -1,14 +1,10 @@
 package http_response
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-)
-
-const (
-	ErrInternal     = "có lỗi hệ thống xảy ra"
-	ErrUnauthorized = "chưa đăng nhập"
 )
 
 func Response(c *gin.Context, status int, verdict string, message string, data interface{}) {
@@ -34,39 +30,37 @@ func NotAuthorized(c *gin.Context, message string) {
 func Error(c *gin.Context, err error) {
 	var httpCode int
 	var verdict string
-	var message string
-	switch err.Error() {
-	case ErrUnauthorized:
+
+	var errUnauthorized *ErrUnauthorized
+	switch {
+	case errors.As(err, &errUnauthorized):
 		httpCode = http.StatusUnauthorized
 		verdict = VerdictNotAuthorized
-		message = ErrUnauthorized
 	default:
 		httpCode = http.StatusInternalServerError
 		verdict = VerdictInternalError
-		message = ErrInternal
 	}
 
-	Response(c, httpCode, verdict, message, nil)
+	Response(c, httpCode, verdict, err.Error(), nil)
 }
 
 func Abort(c *gin.Context, err error) {
 	var httpCode int
 	var verdict string
-	var message string
-	switch err.Error() {
-	case ErrUnauthorized:
+
+	var errUnauthorized *ErrUnauthorized
+	switch {
+	case errors.As(err, &errUnauthorized):
 		httpCode = http.StatusUnauthorized
 		verdict = VerdictNotAuthorized
-		message = ErrUnauthorized
 	default:
 		httpCode = http.StatusInternalServerError
 		verdict = VerdictInternalError
-		message = ErrInternal
 	}
 
 	c.AbortWithStatusJSON(httpCode, gin.H{
 		"status":  httpCode,
 		"verdict": verdict,
-		"message": message,
+		"message": err.Error(),
 	})
 }
