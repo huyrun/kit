@@ -3,7 +3,7 @@ package rabbitmq
 import (
 	"context"
 	"fmt"
-	"github.com/huypher/kit/utils"
+	"github.com/huypher/kit/util"
 	"time"
 
 	"github.com/huypher/kit/log"
@@ -140,5 +140,5 @@ func (c *channel) bind(exchangeName, routingKey string) error {
 }
 
 func genConsumerID(queueName string) string {
-	return fmt.Sprintf("%s-%s", queueName, utils.RandomString(10))
+	return fmt.Sprintf("%s-%s", queueName, util.RandomString(10))
 }
