@@ -1,4 +1,4 @@
-package util
+package utils
 
 func RemoveDupString(items []string) []string {
 	hash := make(map[string]struct{})
