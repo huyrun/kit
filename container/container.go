@@ -1,6 +1,29 @@
 package container
 
+import (
+	"database/sql/driver"
+	"encoding/json"
+	"fmt"
+)
+
 type Map map[string]interface{}
+
+// Scan sqlx JSON scan method
+func (m *Map) Scan(val interface{}) error {
+	switch v := val.(type) {
+	case []byte:
+		return json.Unmarshal(v, &m)
+	case string:
+		return json.Unmarshal([]byte(v), &m)
+	default:
+		return fmt.Errorf("unsupported type: %T", v)
+	}
+}
+
+// Value sqlx JSON value method
+func (m Map) Value() (driver.Value, error) {
+	return json.Marshal(m)
+}
 
 func (m Map) Add(key string, value interface{}) {
 	m[key] = value
