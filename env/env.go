@@ -7,5 +7,6 @@ func GetWithDefault[T any](key string, value T) T {
 	if v, ok := viper.Get(key).(T); ok {
 		return v
 	}
+
 	return value
 }

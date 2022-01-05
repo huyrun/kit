@@ -2,8 +2,8 @@ package utils
 
 import "math/rand"
 
-func RandomString(n int) string {
-	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+func RandomString(n int, alphabet string) string {
+	var letters = []rune(alphabet)
 
 	s := make([]rune, n)
 	for i := range s {

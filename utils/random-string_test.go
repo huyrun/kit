@@ -1,39 +1,27 @@
 package utils
 
 import (
+	"github.com/huypher/kit"
+	"github.com/stretchr/testify/require"
 	"testing"
 )
 
 func TestRandomString(t *testing.T) {
-	type args struct {
-		n int
-	}
-	tests := []struct {
+	t.Parallel()
+
+	testCases := []struct {
 		name string
-		args args
-		want string
+		n int
+		alphabet string
 	}{
-		// TODO: Add test cases.
-		{
-			name: "test1",
-			args: args{
-				n: 10,
-			},
-			want: "",
-		},
-		{
-			name: "test2",
-			args: args{
-				n: 10,
-			},
-			want: "",
-		},
+		{"success", 10, kit.EnglishLetters},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := RandomString(tt.args.n); got != tt.want {
-				t.Errorf("RandomString() = %v, want %v", got, tt.want)
-			}
+	for _, testCase := range testCases {
+		tc := testCase
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+			got := RandomString(tc.n, tc.alphabet)
+			require.NotNil(t, got)
 		})
 	}
 }
